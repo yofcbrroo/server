@@ -118,11 +118,11 @@ const parameters = [
 </script>
 
 <template>
-  <div class="w-screen h-screen flex justify-center items-center">
-    <div class="overflow-x-auto overflow-y-scroll h-[50%] mx-4 bg-gray-900 rounded-md border-2 border-orange-300">
+  <div class="my-10 mx-[10%]">
+    <div class="rounded-md">
       <table class="table">
         <thead>
-          <tr>
+          <tr class="font-black">
             <th>Key</th>
             <th>Desc</th>
             <th>Is Multiple</th>

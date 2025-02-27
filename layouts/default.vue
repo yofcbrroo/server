@@ -1,5 +1,6 @@
 <template>
-  <div class="h-screen w-screen fixed bg-[url(/img/tarot-bg.jpg)]">
+  <Navbar name="FoolVPN"></Navbar>
+  <div class="bg-base-100">
     <slot />
   </div>
 </template>

@@ -5,5 +5,8 @@ export default defineNuxtConfig({
   nitro: {
     preset: "static",
   },
+  tailwindcss: {
+    exposeConfig: true,
+  },
   modules: ["@nuxtjs/tailwindcss"],
 });
