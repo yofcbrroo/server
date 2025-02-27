@@ -17,7 +17,7 @@ const props = defineProps({
         <li><NuxtLink to="/">Home</NuxtLink></li>
         <li><NuxtLink to="/">About</NuxtLink></li>
       </ul>
-      <div class="dropdown dropdown-bottom">
+      <div class="dropdown dropdown-bottom dropdown-end">
         <div tabindex="0" role="button" class="btn m-1">Themes</div>
         <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] p-2 shadow w-52">
           <li v-for="theme in daisyui.themes">
