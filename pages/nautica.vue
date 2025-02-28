@@ -118,7 +118,7 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
 </script>
 
 <template>
-  <div class="grid lg:grid-cols-6 px-[10%] py-10">
+  <div class="grid lg:grid-cols-6 px-[10%] py-10 mb-[8%] lg:mb-0">
     <div>
       <div class="flex flex-col gap-4 p-2">
         <CardWithIcon icon="traffic-light" :text="myip.asOrganization"></CardWithIcon>
@@ -134,14 +134,14 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         </CardWithSlot>
       </div>
     </div>
-    <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start">
+    <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start h-max">
       <span v-for="proxy in displayProxies" v-if="displayProxies[0].isp">
         <ProxyCard :isp="proxy.isp" :ip-port="`${proxy.ip}:${proxy.port}`" :country="proxy.country"></ProxyCard>
       </span>
     </div>
   </div>
   <div class="flex justify-center">
-    <div class="join bottom-0 fixed mb-10">
+    <div class="join bottom-0 fixed mb-[5%] lg:mb-[3%]">
       <input v-on:click="page--" class="join-item btn btn-square" type="radio" name="options" aria-label="<<" />
       <span v-for="pageIndex in pagination">
         <input
