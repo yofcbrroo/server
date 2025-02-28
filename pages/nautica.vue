@@ -15,6 +15,63 @@ const proxies = ref([
   },
 ]);
 const countries = ref([""]);
+const displayProxies = ref([
+  {
+    ip: "",
+    isp: "",
+    port: "",
+    country: "",
+  },
+]);
+const page = ref(0);
+const itemPerPage = ref(20);
+const pagination = ref([0, 1, 2]);
+const selectedCountry = ref("Select Country");
+
+// Functions
+function getTempProxies() {
+  let proxiesTemp = proxies.value;
+
+  if (selectedCountry.value.length == 2) {
+    proxiesTemp = proxiesTemp.filter((proxy) => proxy.country.toString() == selectedCountry.value.toLowerCase());
+  }
+
+  return proxiesTemp;
+}
+function setDisplayProxies() {
+  const displayProxiesTemp = [];
+  const proxiesTemp = getTempProxies();
+
+  for (let i = page.value * itemPerPage.value; i < page.value * itemPerPage.value + itemPerPage.value; i++) {
+    const proxy = proxiesTemp[i];
+    if (proxy?.isp.toString()) {
+      displayProxiesTemp.push(proxiesTemp[i]);
+    }
+  }
+
+  displayProxies.value = displayProxiesTemp as any;
+}
+
+function setPagination() {
+  const proxiesTemp = getTempProxies();
+  const maxIndex = Math.floor(proxiesTemp.length / itemPerPage.value);
+  const maxItem = 5;
+  const paginationTemp = [];
+
+  if (page.value < 0) page.value = 0;
+  if (page.value > maxIndex) page.value = maxIndex;
+  for (let i = page.value <= 2 ? 0 : page.value + 2 >= maxIndex ? maxIndex - 4 : page.value - 2; i <= maxIndex; i++) {
+    paginationTemp.push(i);
+    if (paginationTemp.length >= maxItem) break;
+  }
+  pagination.value = paginationTemp;
+}
+
+// Watcher
+watch([page, proxies, selectedCountry], () => {
+  setDisplayProxies();
+  setPagination();
+});
 
 // Client side fetching
 useFetch("https://myip.shylook.workers.dev", {
@@ -36,6 +93,7 @@ useFetch("https://myip.shylook.workers.dev", {
   }
 });
 
+// Server side fetching
 useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt").then((res) => {
   if (res.status.value == "success") {
     const proxiesTemp = [];
@@ -51,8 +109,6 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
       });
 
       countriesTemp.push(country);
-
-      if (proxiesTemp.length > 20) break;
     }
 
     proxies.value = proxiesTemp as any;
@@ -71,7 +127,7 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         <CardWithIcon icon="sign-right" :text="myip.region"></CardWithIcon>
         <CardWithIcon icon="globe" :text="myip.country"></CardWithIcon>
         <CardWithSlot icon="cloud-computing">
-          <select class="select select-primary w-full max-w-xs">
+          <select class="select select-primary w-full max-w-xs" v-model="selectedCountry">
             <option disabled selected>Select Country</option>
             <option v-for="country in countries">{{ country }}</option>
           </select>
@@ -79,17 +135,25 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
       </div>
     </div>
     <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start">
-      <span v-for="proxy in proxies">
+      <span v-for="proxy in displayProxies" v-if="displayProxies[0].isp">
         <ProxyCard :isp="proxy.isp" :ip-port="`${proxy.ip}:${proxy.port}`" :country="proxy.country"></ProxyCard>
       </span>
     </div>
   </div>
   <div class="flex justify-center">
-    <div class="join mb-10">
-      <input class="join-item btn btn-square" type="radio" name="options" aria-label="1" :checked="true" />
-      <input class="join-item btn btn-square" type="radio" name="options" aria-label="2" />
-      <input class="join-item btn btn-square" type="radio" name="options" aria-label="3" />
-      <input class="join-item btn btn-square" type="radio" name="options" aria-label="4" />
+    <div class="join bottom-0 fixed mb-10">
+      <input v-on:click="page--" class="join-item btn btn-square" type="radio" name="options" aria-label="<<" />
+      <span v-for="pageIndex in pagination">
+        <input
+          v-on:click="page = pageIndex"
+          class="join-item btn btn-square"
+          type="radio"
+          name="options"
+          :aria-label="pageIndex.toString()"
+          :class="pageIndex == page ? 'btn-active' : ''"
+        />
+      </span>
+      <input v-on:click="page++" class="join-item btn btn-square" type="radio" name="options" aria-label=">>" />
     </div>
   </div>
 </template>
