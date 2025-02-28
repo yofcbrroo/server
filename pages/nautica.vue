@@ -1,7 +1,10 @@
 <script setup lang="ts">
 const myip = reactive({
-  asOrganization: "Getting info",
-  ip: "Getting info",
+  asOrganization: "",
+  ip: "",
+  city: "",
+  region: "",
+  country: "",
 });
 const proxies = ref([
   {
@@ -16,13 +19,18 @@ const countries = ref([""]);
 // Client side fetching
 useFetch("https://myip.shylook.workers.dev", {
   server: false,
-}).then((res) => {
+  cache: "no-cache",
+}).then(async (res) => {
+  await res.execute();
   if (res.status.value == "success") {
     const jsonValue = JSON.parse(res.data.value as string);
 
     myip.asOrganization = jsonValue.asOrganization;
     myip.ip = jsonValue.ip;
-  } else {
+    myip.city = jsonValue.city;
+    myip.region = jsonValue.region;
+    myip.country = jsonValue.country;
+  } else if (res.error.value) {
     myip.asOrganization = "Failed";
     myip.ip = "Failed";
   }
@@ -49,8 +57,6 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
 
     proxies.value = proxiesTemp as any;
     countries.value = [...new Set(countriesTemp)];
-
-    console.log(proxies.value);
   }
 });
 </script>
@@ -61,6 +67,9 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
       <div class="flex flex-col gap-4 p-2">
         <CardWithIcon icon="traffic-light" :text="myip.asOrganization"></CardWithIcon>
         <CardWithIcon icon="sign-out-alt" :text="myip.ip"></CardWithIcon>
+        <CardWithIcon icon="building" :text="myip.city"></CardWithIcon>
+        <CardWithIcon icon="sign-right" :text="myip.region"></CardWithIcon>
+        <CardWithIcon icon="globe" :text="myip.country"></CardWithIcon>
         <CardWithSlot icon="cloud-computing">
           <select class="select select-primary w-full max-w-xs">
             <option disabled selected>Select Country</option>
@@ -69,7 +78,7 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         </CardWithSlot>
       </div>
     </div>
-    <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-wrap justify-start">
+    <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start">
       <span v-for="proxy in proxies">
         <ProxyCard :isp="proxy.isp" :ip-port="`${proxy.ip}:${proxy.port}`" :country="proxy.country"></ProxyCard>
       </span>

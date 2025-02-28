@@ -10,7 +10,11 @@ const props = defineProps({
   <div class="w-full lg:w-max bg-secondary rounded-lg grid grid-cols-1 p-4 hover:scale-105 transition-all duration-200">
     <div>
       <div class="flex justify-start items-center gap-2 font-bold">
-        <img width="32" :src="`https://hatscripts.github.io/circle-flags/flags/${props.country}.svg`" alt="Indonesia" />
+        <img
+          width="32"
+          :src="`https://hatscripts.github.io/circle-flags/flags/${props.country}.svg`"
+          :alt="props.country"
+        />
         <div class="flex flex-col">
           <span> {{ props.isp }} </span>
           <span> {{ props.ipPort }} </span>
