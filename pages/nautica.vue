@@ -13,7 +13,10 @@ const proxies = ref([
 ]);
 const countries = ref([""]);
 
-useFetch("https://myip.shylook.workers.dev").then((res) => {
+// Client side fetching
+useFetch("https://myip.shylook.workers.dev", {
+  server: false,
+}).then((res) => {
   if (res.status.value == "success") {
     const jsonValue = JSON.parse(res.data.value as string);
 
