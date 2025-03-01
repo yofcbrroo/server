@@ -16,6 +16,7 @@ const proxies = ref([
   },
 ]);
 const countries = ref([""]);
+const selectedCountry = ref("Select Country");
 const displayProxies = ref([
   {
     ip: "",
@@ -27,18 +28,34 @@ const displayProxies = ref([
 const page = ref(0);
 const itemPerPage = ref(15);
 const pagination = ref([0, 1, 2]);
-const selectedCountry = ref("Select Country");
+const displaySelected = ref(false);
+const openToast = ref(false);
+const toastText = ref("");
+const search = ref("");
 
 // Functions
 function getTempProxies() {
   let proxiesTemp = proxies.value;
 
+  if (displaySelected.value) {
+    proxiesTemp = proxiesTemp.filter((proxy) =>
+      selectedProxies.getSelectedProxies.includes(`${proxy.ip}:${proxy.port}`)
+    );
+  }
+
   if (selectedCountry.value.length == 2) {
     proxiesTemp = proxiesTemp.filter((proxy) => proxy.country.toString() == selectedCountry.value.toLowerCase());
   }
 
+  if (search.value != "") {
+    proxiesTemp = proxiesTemp.filter((proxy) =>
+      proxy.isp.toString().toLowerCase().includes(search.value.toLowerCase())
+    );
+  }
+
   return proxiesTemp;
 }
+
 function setDisplayProxies() {
   const displayProxiesTemp = [];
   const proxiesTemp = getTempProxies();
@@ -68,10 +85,19 @@ function setPagination() {
   pagination.value = paginationTemp;
 }
 
+function copyToClipboard() {
+  navigator.clipboard.writeText(selectedProxies.getSelectedProxies.toString());
+}
+
 // Watcher
-watch([page, proxies, selectedCountry], () => {
+watch([page, proxies, selectedCountry, displaySelected, search], () => {
   setDisplayProxies();
   setPagination();
+});
+watch([openToast], () => {
+  setTimeout(() => {
+    openToast.value = false;
+  }, 1000);
 });
 
 // Client side fetching
@@ -113,7 +139,7 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
     }
 
     proxies.value = proxiesTemp as any;
-    countries.value = [...new Set(countriesTemp)];
+    countries.value = ["All", ...new Set(countriesTemp)];
   }
 });
 </script>
@@ -122,11 +148,22 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
   <div class="grid lg:grid-cols-6 px-[10%] py-10 mb-[8%] lg:mb-0">
     <div>
       <div class="flex flex-col gap-4 p-2">
-        <CardWithIcon icon="traffic-light" :text="myip.asOrganization"></CardWithIcon>
-        <CardWithIcon icon="sign-out-alt" :text="myip.ip"></CardWithIcon>
-        <CardWithIcon icon="building" :text="myip.city"></CardWithIcon>
-        <CardWithIcon icon="sign-right" :text="myip.region"></CardWithIcon>
-        <CardWithIcon icon="globe" :text="myip.country"></CardWithIcon>
+        <CardWithSlot icon="traffic-light" :text="myip.asOrganization">
+          <div class="flex flex-col w-full">
+            <span>{{ myip.asOrganization }}</span>
+            <span>{{ myip.ip }}</span>
+          </div>
+        </CardWithSlot>
+        <CardWithSlot icon="map-marker" :text="myip.ip">
+          <div class="flex flex-col w-full">
+            <div>
+              <span>{{ myip.city }}</span>
+              <span>, </span>
+              <span>{{ myip.region }}</span>
+            </div>
+            <span>{{ myip.country }}</span>
+          </div>
+        </CardWithSlot>
         <CardWithSlot icon="cloud-computing">
           <select class="select select-primary w-full max-w-xs" v-model="selectedCountry">
             <option disabled selected>Select Country</option>
@@ -142,17 +179,33 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
     </div>
     <div>
       <div class="flex flex-col gap-4 p-2">
-        <CardWithIcon
-          icon="list-ul"
-          :text="
-            selectedProxies.getSelectedProxies.length.toString() +
-            ` ${selectedProxies.getSelectedProxies.length > 1 ? 'proxies' : 'proxy'}`
-          "
-        ></CardWithIcon>
+        <CardWithSlot icon="search">
+          <div class="w-full">
+            <input v-model="search" type="text" placeholder="Type here" class="input w-full" />
+          </div>
+        </CardWithSlot>
+        <CardWithSlot icon="list-ul">
+          <div class="flex flex-col w-full">
+            <div v-on:click="displaySelected = !displaySelected" class="btn w-full font-bold text-md">
+              {{ selectedProxies.getSelectedProxies.length }} proxies
+            </div>
+          </div>
+        </CardWithSlot>
         <CardWithSlot icon="cog">
           <div class="flex flex-col w-full gap-2">
             <div class="btn w-full font-bold text-md">Settings</div>
-            <div class="btn w-full font-bold text-md">Export</div>
+            <div
+              v-on:click="
+                () => {
+                  copyToClipboard();
+                  openToast = true;
+                  toastText = 'Proxy copied to clipboard!';
+                }
+              "
+              class="btn w-full font-bold text-md"
+            >
+              Export
+            </div>
           </div>
         </CardWithSlot>
       </div>
@@ -172,6 +225,11 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         />
       </span>
       <input v-on:click="page++" class="join-item btn btn-square" type="radio" name="options" aria-label=">>" />
+    </div>
+  </div>
+  <div v-if="openToast" class="toast">
+    <div class="alert alert-info">
+      <span>{{ toastText }}</span>
     </div>
   </div>
 </template>
