@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const selectedProxies = useSelectedProxiesStore();
 const myip = reactive({
   asOrganization: "",
   ip: "",
@@ -24,7 +25,7 @@ const displayProxies = ref([
   },
 ]);
 const page = ref(0);
-const itemPerPage = ref(20);
+const itemPerPage = ref(15);
 const pagination = ref([0, 1, 2]);
 const selectedCountry = ref("Select Country");
 
@@ -134,10 +135,27 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         </CardWithSlot>
       </div>
     </div>
-    <div class="lg:col-start-2 lg:col-end-7 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start h-max">
+    <div class="lg:col-start-2 lg:col-end-6 p-2 gap-3 flex flex-col lg:flex-row flex-wrap justify-start h-max">
       <span v-for="proxy in displayProxies" v-if="displayProxies[0].isp">
         <ProxyCard :isp="proxy.isp" :ip-port="`${proxy.ip}:${proxy.port}`" :country="proxy.country"></ProxyCard>
       </span>
+    </div>
+    <div>
+      <div class="flex flex-col gap-4 p-2">
+        <CardWithIcon
+          icon="list-ul"
+          :text="
+            selectedProxies.getSelectedProxies.length.toString() +
+            ` ${selectedProxies.getSelectedProxies.length > 1 ? 'proxies' : 'proxy'}`
+          "
+        ></CardWithIcon>
+        <CardWithSlot icon="cog">
+          <div class="flex flex-col w-full gap-2">
+            <div class="btn w-full font-bold text-md">Settings</div>
+            <div class="btn w-full font-bold text-md">Export</div>
+          </div>
+        </CardWithSlot>
+      </div>
     </div>
   </div>
   <div class="flex justify-center">

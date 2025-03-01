@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const selectedProxies = useSelectedProxiesStore();
 const props = defineProps({
   isp: String,
   ipPort: String,
@@ -10,6 +11,8 @@ const stats = reactive({
   delay: 0,
   loading: false,
 });
+const isSelected = ref(false);
+
 // Server side fetching
 async function checkProxyHealth() {
   stats.loading = true;
@@ -25,11 +28,29 @@ async function checkProxyHealth() {
   stats.loading = false;
 }
 
+function selectProxy() {
+  selectedProxies.toggleSelectedProxies(props.ipPort as string);
+  toggleIsSelected();
+}
+
+function toggleIsSelected() {
+  if (selectedProxies.getSelectedProxies.includes(props.ipPort as string)) {
+    isSelected.value = true;
+  } else {
+    isSelected.value = false;
+  }
+}
+
 onMounted(() => {
   checkProxyHealth();
+  toggleIsSelected();
 });
 watch(props, () => {
   checkProxyHealth();
+  toggleIsSelected();
+});
+watch(selectedProxies.getSelectedProxies, () => {
+  toggleIsSelected();
 });
 </script>
 
@@ -39,7 +60,11 @@ watch(props, () => {
     :class="stats.proxyip == true ? 'bg-secondary text-secondary-content' : 'bg-accent text-accent-content'"
   >
     <div>
-      <div class="flex justify-start items-center gap-2 font-bold">
+      <div
+        v-on:click="selectProxy"
+        class="flex justify-start items-center gap-2 font-bold cursor-pointer hover:bg-primary rounded-lg p-1 transition-all duration-200"
+        :class="isSelected ? 'bg-primary' : ''"
+      >
         <img
           width="32"
           :src="`https://hatscripts.github.io/circle-flags/flags/${props.country}.svg`"
