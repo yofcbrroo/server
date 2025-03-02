@@ -7,10 +7,10 @@ const props = defineProps({
 </script>
 
 <template>
-  <NuxtLink :to="props.to" class="h-full">
+  <NuxtLink :to="props.to" class="flex justify-center items-center">
     <img
       :src="props.img"
-      class="h-full grayscale hover:grayscale-0 transition-all duration-200 hover:scale-105"
+      class="grayscale hover:grayscale-0 transition-all duration-200 hover:scale-105"
       :alt="props.alt"
     />
   </NuxtLink>

@@ -86,7 +86,13 @@ function setPagination() {
 }
 
 function copyToClipboard() {
-  navigator.clipboard.writeText(selectedProxies.getSelectedProxies.toString());
+  const settings: ProxySettings = {
+    protocol: "trojan",
+    format: "raw",
+  };
+  const configResult = parseProxies(selectedProxies.getSelectedProxies, settings);
+
+  navigator.clipboard.writeText(configResult as string);
 }
 
 // Watcher
@@ -97,7 +103,7 @@ watch([page, proxies, selectedCountry, displaySelected, search], () => {
 watch([openToast], () => {
   setTimeout(() => {
     openToast.value = false;
-  }, 1000);
+  }, 3000);
 });
 
 // Client side fetching
