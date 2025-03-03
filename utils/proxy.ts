@@ -1,3 +1,5 @@
+import { getFlagEmoji } from "./string";
+
 const vlessTemplate =
   "vless://fc60147e-76b8-4bc5-b691-90b2da79e3d2@172.67.73.39:443?encryption=none&type=ws&host=nautica.foolvpn.me&security=tls&sni=nautica.foolvpn.me&path=%2F172.232.239.151-587#1%20%F0%9F%87%AE%F0%9F%87%A9%20Akamai%20Connected%20Cloud%20WS%20TLS%20[nautica]";
 const trojanTemplate =
@@ -5,15 +7,21 @@ const trojanTemplate =
 const ssTemplate =
   "ss://bm9uZTpkMDIzMmM1NS1kZjE0LTRjMzMtYTMxOS1jNGM1NTVmMmIwZjQ%3D@172.67.73.39:443?encryption=none&type=ws&host=nautica.foolvpn.me&plugin=v2ray-plugin%3Btls%3Bmux%3D0%3Bmode%3Dwebsocket%3Bpath%3D%2F43.218.77.16-1443%3Bhost%3Dnautica.foolvpn.me&security=tls&sni=nautica.foolvpn.me&path=%2F43.218.77.16-1443#1%20%F0%9F%87%AE%F0%9F%87%A9%20Amazon.com%20WS%20TLS%20[nautica]";
 
-type protocols = "trojan" | "vless" | "ss";
+type proxyType = {
+  ip: string;
+  isp: string;
+  port: string;
+  country: string;
+};
+type protocolsType = "trojan" | "vless" | "ss";
 export type ProxySettings = {
-  protocol: protocols;
+  protocol: protocolsType;
   format: "mihomo" | "clash" | "sing-box" | "bfr" | "sfa" | "raw";
 
   // Etc
 };
 
-export function parseProxies(proxies: string[], settings: ProxySettings) {
+export function parseProxies(proxies: proxyType[], settings: ProxySettings) {
   const proxyParser = new ParseProxies(proxies, settings.protocol);
 
   switch (settings.format) {
@@ -32,38 +40,44 @@ export function parseProxies(proxies: string[], settings: ProxySettings) {
 }
 
 class ParseProxies {
-  proxies: string[] = [];
-  format: protocols;
+  proxies: proxyType[] = [];
+  format: protocolsType;
 
-  constructor(proxies: string[], format: protocols) {
+  constructor(proxies: proxyType[], format: protocolsType) {
     this.proxies = proxies;
     this.format = format;
   }
 
   toRaw() {
     const results: string[] = [];
-    if (this.format == "trojan") {
-      let configTemplate = URL.parse(trojanTemplate);
+    let configTemplate: URL | undefined | null;
 
-      if (configTemplate) {
-        for (const proxy of this.proxies) {
-          let config = configTemplate;
-          let configSearchParams = config?.searchParams;
-
-          configSearchParams?.set("path", proxy.replace(":", "-"));
-          config.hash = "Tes-" + proxy;
-
-          config.search = configSearchParams.toString();
-          results.push(config.toString());
-        }
-      }
-
-      return results.join("\n");
-    } else if (this.format == "vless") {
-      const configTemplate = URL.parse(vlessTemplate);
-    } else {
-      const configTemplate = URL.parse(ssTemplate);
+    switch (this.format) {
+      case "trojan":
+        configTemplate = URL.parse(trojanTemplate);
+        break;
+      case "vless":
+        configTemplate = URL.parse(vlessTemplate);
+        break;
+      case "ss":
+        configTemplate = URL.parse(ssTemplate);
+        break;
     }
+
+    if (configTemplate) {
+      for (const proxy of this.proxies) {
+        let config = configTemplate;
+        let configSearchParams = config?.searchParams;
+
+        configSearchParams?.set("path", `${proxy.ip}-${proxy.port}`);
+        config.hash = `${getFlagEmoji(proxy.country)} ${proxy.isp} WS TLS [${proxy.ip}]`;
+
+        config.search = configSearchParams.toString();
+        results.push(config.toString());
+      }
+    }
+
+    return results.join("\n");
   }
 
   // clash or mihomo

@@ -7,14 +7,14 @@ const myip = reactive({
   region: "",
   country: "",
 });
-const proxies = ref([
+const proxies = ref<
   {
-    ip: String,
-    isp: String,
-    port: String,
-    country: String,
-  },
-]);
+    ip: string;
+    isp: string;
+    port: string;
+    country: string;
+  }[]
+>([{ ip: "", isp: "", port: "", country: "" }]);
 const countries = ref([""]);
 const selectedCountry = ref("Select Country");
 const displayProxies = ref([
@@ -86,12 +86,15 @@ function setPagination() {
 }
 
 function copyToClipboard() {
+  const proxiesTemp = proxies.value;
   const settings: ProxySettings = {
     protocol: "trojan",
     format: "raw",
   };
-  const configResult = parseProxies(selectedProxies.getSelectedProxies, settings);
-
+  const configResult = parseProxies(
+    proxiesTemp.filter((proxy) => selectedProxies.getSelectedProxies.includes(`${proxy.ip}:${proxy.port}`)) as any,
+    settings
+  );
   navigator.clipboard.writeText(configResult as string);
 }
 
