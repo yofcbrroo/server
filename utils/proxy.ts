@@ -17,9 +17,16 @@ type protocolsType = "trojan" | "vless" | "ss";
 export type ProxySettings = {
   protocol: protocolsType;
   format: "mihomo" | "clash" | "sing-box" | "bfr" | "sfa" | "raw";
-
-  // Etc
+  tls: boolean;
 };
+
+export function getProtocols() {
+  return ["trojan", "vless", "ss"];
+}
+
+export function getFormats() {
+  return ["mihomo", "clash", "sing-box", "bfr", "sfa", "raw"];
+}
 
 export function parseProxies(proxies: proxyType[], settings: ProxySettings) {
   const proxyParser = new ParseProxies(proxies, settings.protocol);

@@ -7,14 +7,7 @@ const myip = reactive({
   region: "",
   country: "",
 });
-const proxies = ref<
-  {
-    ip: string;
-    isp: string;
-    port: string;
-    country: string;
-  }[]
->([{ ip: "", isp: "", port: "", country: "" }]);
+const proxies = ref([{ ip: "", isp: "", port: "", country: "" }]);
 const countries = ref([""]);
 const selectedCountry = ref("Select Country");
 const displayProxies = ref([
@@ -32,6 +25,11 @@ const displaySelected = ref(false);
 const openToast = ref(false);
 const toastText = ref("");
 const search = ref("");
+const proxySettings = reactive<ProxySettings>({
+  protocol: "trojan",
+  format: "raw",
+  tls: false,
+});
 
 // Functions
 function getTempProxies() {
@@ -87,13 +85,9 @@ function setPagination() {
 
 function copyToClipboard() {
   const proxiesTemp = proxies.value;
-  const settings: ProxySettings = {
-    protocol: "trojan",
-    format: "raw",
-  };
   const configResult = parseProxies(
     proxiesTemp.filter((proxy) => selectedProxies.getSelectedProxies.includes(`${proxy.ip}:${proxy.port}`)) as any,
-    settings
+    proxySettings
   );
   navigator.clipboard.writeText(configResult as string);
 }
@@ -154,6 +148,41 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
 </script>
 
 <template>
+  <dialog id="my_modal_1" class="modal">
+    <div class="modal-box">
+      <h3 class="text-lg font-bold">Settings</h3>
+      <p class="py-4">Press ESC key or click the button below to close</p>
+      <div class="flex flex-wrap gap-2">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Protocol</legend>
+          <select class="select" v-model="proxySettings.protocol">
+            <option disabled selected>Pick a protocol</option>
+            <option v-for="protocol in getProtocols()" :value="protocol">{{ protocol }}</option>
+          </select>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Format</legend>
+          <select class="select" v-model="proxySettings.format">
+            <option disabled selected>Pick a format</option>
+            <option v-for="format in getFormats()" :value="format">{{ format }}</option>
+          </select>
+        </fieldset>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">TLS</legend>
+          <select class="select" v-model="proxySettings.tls">
+            <option disabled selected>is TLS</option>
+            <option v-for="tls in [true, false]" :value="tls">{{ tls }}</option>
+          </select>
+        </fieldset>
+      </div>
+      <div class="modal-action">
+        <form method="dialog">
+          <!-- if there is a button in form, it will close the modal -->
+          <button class="btn">Done</button>
+        </form>
+      </div>
+    </div>
+  </dialog>
   <div class="grid lg:grid-cols-6 px-[10%] py-10 mb-[8%] lg:mb-0">
     <div>
       <div class="flex flex-col gap-4 p-2">
@@ -202,7 +231,7 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
         </CardWithSlot>
         <CardWithSlot icon="cog">
           <div class="flex flex-col w-full gap-2">
-            <div class="btn w-full font-bold text-md">Settings</div>
+            <div class="btn w-full font-bold text-md" onclick="my_modal_1.showModal()">Settings</div>
             <div
               v-on:click="
                 () => {
