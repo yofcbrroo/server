@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { daisyui } from "#tailwind-config";
 
+const routerPaths = ref([
+  { name: "Home", path: "/" },
+  { name: "Nautica", path: "/nautica" },
+  { name: "About", path: "/" },
+  { name: "Tools", path: "/" },
+]);
+
 const props = defineProps({
   name: String,
   root: String,
@@ -13,9 +20,10 @@ const props = defineProps({
       <NuxtLink to="/" class="btn btn-ghost text-xl">{{ props.name }}</NuxtLink>
     </div>
     <div class="flex-none">
-      <ul class="menu menu-horizontal px-1 font-bold gap-2 h-max flex items-center">
-        <li><NuxtLink to="/">Home</NuxtLink></li>
-        <li><NuxtLink to="/">About</NuxtLink></li>
+      <ul class="menu menu-horizontal px-1 font-bold gap-2 h-max lg:flex items-center hidden">
+        <li v-for="routerPath in routerPaths">
+          <NuxtLink :to="routerPath.path">{{ routerPath.name }}</NuxtLink>
+        </li>
         <div class="dropdown dropdown-bottom dropdown-end w-max">
           <div tabindex="0" role="button" class="btn m-1">Themes</div>
           <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] p-2 shadow w-52">
@@ -31,6 +39,14 @@ const props = defineProps({
           </ul>
         </div>
       </ul>
+      <div class="dropdown dropdown-end lg:hidden">
+        <div tabindex="0" role="button" class="btn btn-sm m-1">Menu</div>
+        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+          <li v-for="routerPath in routerPaths">
+            <NuxtLink :to="routerPath.path">{{ routerPath.name }}</NuxtLink>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 </template>
