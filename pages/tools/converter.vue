@@ -11,6 +11,10 @@ function convertProxiesTo(format: string) {
   const proxies = rawProxies.value.split("\n");
   convertedProxies.value = proxies.join("\n");
 }
+
+function copyToClipboard() {
+  navigator.clipboard.writeText(convertedProxies.value);
+}
 </script>
 
 <template>
@@ -39,5 +43,9 @@ function convertProxiesTo(format: string) {
         disabled
       ></textarea>
     </fieldset>
+
+    <div>
+      <button class="btn btn-primary" v-on:click="copyToClipboard">Copy to Clipboard</button>
+    </div>
   </div>
 </template>
