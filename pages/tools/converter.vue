@@ -1,15 +1,26 @@
 <script setup lang="ts">
 const rawProxies = ref("");
 const convertedProxies = ref("");
-const convertFormats = ref(["clash", "sfa", "brf"]);
+const convertFormats = ref(["clash", "sfa", "bfr"]);
 
-function convertProxiesTo(format: string) {
-  if (rawProxies.value === "") {
-    return;
+async function convertProxiesTo(format: string) {
+  try {
+    const res = await fetch("https://api.foolvpn.me/convert", {
+      method: "post",
+      body: JSON.stringify({
+        url: rawProxies.value.split("\n").join(","),
+        format: format,
+      }),
+    });
+
+    if (format == "clash") {
+      convertedProxies.value = await res.text();
+    } else {
+      convertedProxies.value = JSON.stringify(await res.json(), null, "  ");
+    }
+  } catch (e: any) {
+    convertedProxies.value = e.message;
   }
-
-  const proxies = rawProxies.value.split("\n");
-  convertedProxies.value = proxies.join("\n");
 }
 
 function copyToClipboard() {
@@ -29,7 +40,15 @@ function copyToClipboard() {
     </fieldset>
 
     <div class="flex gap-2">
-      <button v-for="format in convertFormats" class="btn btn-primary" v-on:click="convertProxiesTo(format)">
+      <button
+        v-for="format in convertFormats"
+        class="btn btn-primary"
+        v-on:click="
+          async () => {
+            await convertProxiesTo(format);
+          }
+        "
+      >
         {{ format.toUpperCase() }}
       </button>
     </div>

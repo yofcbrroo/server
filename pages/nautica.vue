@@ -83,9 +83,9 @@ function setPagination() {
   pagination.value = paginationTemp;
 }
 
-function copyToClipboard() {
+async function copyToClipboard() {
   const proxiesTemp = proxies.value;
-  const configResult = parseProxies(
+  const configResult = await parseProxies(
     proxiesTemp.filter((proxy) => selectedProxies.getSelectedProxies.includes(`${proxy.ip}:${proxy.port}`)) as any,
     proxySettings
   );
@@ -234,8 +234,8 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
             <div class="btn w-full font-bold text-md" onclick="my_modal_1.showModal()">Settings</div>
             <div
               v-on:click="
-                () => {
-                  copyToClipboard();
+                async () => {
+                  await copyToClipboard();
                   openToast = true;
                   toastText = 'Proxy copied to clipboard!';
                 }
