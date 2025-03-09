@@ -77,14 +77,14 @@ class ParseProxies {
         if (config.protocol == "ss:") {
           let ssPlugin: string[] = (configSearchParams.get("plugin") as string)?.split(";");
 
-          ssPlugin = ssPlugin?.map((key) => (key.startsWith("path") ? `path=${proxy.ip}-${proxy.port}` : key));
+          ssPlugin = ssPlugin?.map((key) => (key.startsWith("path") ? `path=/${proxy.ip}-${proxy.port}` : key));
 
           if (!this.settings.tls) {
             ssPlugin?.splice(ssPlugin.indexOf("tls"), 1);
           }
           configSearchParams.set("plugin", ssPlugin?.join(";"));
         } else {
-          configSearchParams?.set("path", `${proxy.ip}-${proxy.port}`);
+          configSearchParams?.set("path", `/${proxy.ip}-${proxy.port}`);
           if (!this.settings.tls) {
             configSearchParams?.set("security", "none");
           }
