@@ -55,7 +55,7 @@ onMounted(() => {
 
 <template>
   <div class="flex justify-center">
-    <div class="w-[50%] flex justify-around flex-wrap gap-2 p-2">
+    <div class="w-full lg:w-[50%] flex justify-around flex-wrap gap-2 p-2">
       <Card v-for="server in serverList">
         <div class="mx-5 my-2 grid grid-cols-3 font-bold" v-if="server.info.country && server.status.mem">
           <div class="flex items-center font-bold gap-3">
@@ -76,7 +76,7 @@ onMounted(() => {
               </span>
             </div>
           </div>
-          <div class="col-span-2 flex justify-center gap-5">
+          <div class="col-span-2 flex justify-center items-center gap-5">
             <div class="flex flex-col">
               <div>CPU</div>
               <div class="text-xs">{{ parseInt(server.status.cpu[0]).toFixed() }} %</div>
