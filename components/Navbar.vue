@@ -5,6 +5,7 @@ const routerPaths = ref([
   { name: "Home", path: "/" },
   { name: "About", path: "/" },
   { name: "Uptime", path: "/uptime" },
+  { name: "Topup", path: "/topup" },
   { name: "Tools", children: [{ name: "Converter", path: "/tools/converter" }] },
 ]);
 
