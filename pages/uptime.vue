@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import prettyBytes from "pretty-bytes";
 
-const refreshInterval = ref(3);
+const refreshInterval = ref(2);
 const serverList = ref<
   Array<{
     url: string;
@@ -58,9 +58,9 @@ async function getServerStatus(server: string) {
       if (serverList.value[i].url == server) {
         const resJson = await res.json();
         serverList.value[i].speed["upload"] =
-          (resJson.nic[0].bytesSent - serverList.value[i].status.nic?.[0].bytesSent) / refreshInterval.value;
+          (resJson.nic[0].bytesSent - serverList.value[i].status.nic?.[0].bytesSent || 0) / refreshInterval.value;
         serverList.value[i].speed["download"] =
-          (resJson.nic[0].bytesRecv - serverList.value[i].status.nic?.[0].bytesRecv) / refreshInterval.value;
+          (resJson.nic[0].bytesRecv - serverList.value[i].status.nic?.[0].bytesRecv || 0) / refreshInterval.value;
         serverList.value[i].status = resJson;
       }
     }
@@ -71,7 +71,7 @@ onMounted(() => {
   for (const server of serverList.value) {
     getServerInfo(server.url);
 
-    setInterval(() => {
+    setInterval(async () => {
       getServerStatus(server.url);
       getServerPing(server.url);
     }, refreshInterval.value * 1000);
