@@ -9,6 +9,7 @@ const serverList = ref<
     info: any;
     status: any;
     speed: any;
+    errors: Array<any>;
   }>
 >([
   {
@@ -17,6 +18,7 @@ const serverList = ref<
     info: {},
     status: {},
     speed: {},
+    errors: [],
   },
   {
     url: "sg1.foolvpn.me",
@@ -24,71 +26,118 @@ const serverList = ref<
     info: {},
     status: {},
     speed: {},
+    errors: [],
   },
 ]);
 
 async function getServerPing(server: string) {
-  let pingData = {};
   try {
     const startTime = new Date().getTime();
     const res = await fetch(`https://${server}/api/v1/ping`);
     const finishTime = new Date().getTime();
-    pingData = {
-      delay: res.status == 200 ? finishTime - startTime : 0,
-      date: new Date(),
-    };
-  } catch (e: any) {
-    pingData = {
-      delay: 0,
-      date: new Date(),
-    };
-  }
 
-  for (const i in serverList.value) {
-    if (serverList.value[i].url == server) {
-      serverList.value[i].ping.push(pingData);
-
-      if (serverList.value[i].ping.length > 22) {
-        serverList.value[i].ping.shift();
-      }
+    if (res.status == 200) {
+      return {
+        error: false,
+        result: finishTime - startTime,
+      };
+    } else {
+      throw new Error(res.statusText);
     }
+  } catch (e: any) {
+    return {
+      error: true,
+      message: e.message,
+    };
   }
 }
 
 async function getServerInfo(server: string) {
-  const res = await fetch(`https://${server}/api/v1/info`);
-  if (res.status == 200) {
-    for (const i in serverList.value) {
-      if (serverList.value[i].url == server) {
-        serverList.value[i].info = await res.json();
-      }
+  try {
+    const res = await fetch(`https://${server}/api/v1/info`);
+    if (res.status == 200) {
+      return {
+        error: false,
+        result: await res.json(),
+      };
+    } else {
+      throw new Error(res.statusText);
     }
+  } catch (e: any) {
+    return {
+      error: true,
+      message: e.message,
+    };
   }
 }
 
 async function getServerStatus(server: string) {
-  const res = await fetch(`https://${server}/api/v1/status`);
-  if (res.status == 200) {
-    for (const i in serverList.value) {
-      if (serverList.value[i].url == server) {
-        const resJson = await res.json();
-        serverList.value[i].speed["upload"] =
-          (resJson.nic[0].bytesSent - serverList.value[i].status.nic?.[0].bytesSent || 0) / refreshInterval.value;
-        serverList.value[i].speed["download"] =
-          (resJson.nic[0].bytesRecv - serverList.value[i].status.nic?.[0].bytesRecv || 0) / refreshInterval.value;
-        serverList.value[i].status = resJson;
-      }
+  try {
+    const res = await fetch(`https://${server}/api/v1/status`);
+    if (res.status == 200) {
+      return {
+        error: false,
+        result: await res.json(),
+      };
+    } else {
+      throw new Error(res.statusText);
     }
+  } catch (e: any) {
+    return {
+      error: true,
+      message: e.message,
+    };
   }
 }
 
-onMounted(() => {
-  for (const server of serverList.value) {
-    getServerInfo(server.url);
+onMounted(async () => {
+  for (let server of serverList.value) {
+    getServerInfo(server.url).then((res) => {
+      if (res.error) {
+        server.errors.unshift(res.message);
+        return;
+      }
+
+      server.info = res.result;
+    });
+
+    setInterval(() => {
+      for (const server of serverList.value) {
+        if (server.errors.length) {
+          server.errors.pop();
+        }
+      }
+    }, 5000);
 
     setInterval(async () => {
-      getServerStatus(server.url);
-      getServerPing(server.url);
+      getServerStatus(server.url).then((res) => {
+        if (res.error) {
+          server.errors.unshift(res.message);
+          return;
+        }
+
+        server.speed["upload"] =
+          res.result.nic[0].bytesSent - server.status.nic?.[0].bytesSent || 0 / refreshInterval.value;
+        server.speed["download"] =
+          res.result.nic[0].bytesRecv - server.status.nic?.[0].bytesRecv || 0 / refreshInterval.value;
+
+        server.status = res.result;
+      });
+
+      getServerPing(server.url).then((res) => {
+        if (res.error) {
+          server.errors.unshift(res.message);
+        }
+
+        server.ping.push({
+          delay: res.result ? res.result : 0,
+          date: new Date(),
+        });
+
+        if (server.ping.length > 22) {
+          server.ping.shift();
+        }
+      });
     }, refreshInterval.value * 1000);
   }
 });
@@ -100,7 +149,10 @@ onMounted(() => {
       <Card v-for="server in serverList">
         <div class="mx-5 my-2 grid grid-rows-3 gap-3 lg:grid-rows-none lg:grid-cols-3 font-bold">
           <div class="w-full h-full">
-            <div v-if="server.info.country" class="flex items-center justify-center lg:justify-start font-bold gap-3">
+            <div
+              v-if="server.info.country && server.status.host"
+              class="flex items-center justify-center lg:justify-start font-bold gap-3"
+            >
               <span class="text-3xl hidden lg:block">
                 {{ getFlagEmoji(server.info.country) }}
               </span>
@@ -113,7 +165,7 @@ onMounted(() => {
                 </span>
                 <span class="text-xs font-normal italic">
                   {{ server.status.host.os }}
-                  {{ server.status.host.platformFamily }}
+                  {{ server.status.host.platform }}
                   {{ server.status.host.platformVersion }}
                 </span>
               </div>
@@ -199,6 +251,9 @@ onMounted(() => {
             </div>
             <div v-else class="skeleton w-full h-16 bg-primary"></div>
           </div>
+        </div>
+        <div v-if="server.errors.length" class="w-full flex justify-center badge badge-accent">
+          {{ server.errors[0] }}
         </div>
       </Card>
     </div>
