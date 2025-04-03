@@ -61,8 +61,6 @@ const updateOptions = () => {
 };
 
 const submitTopup = () => {
-  alert(
-    `Top-Up ${selectedAmount.value} ${selectedService.value} ke User ID ${userId.value} menggunakan ${selectedPayment.value}`
-  );
+  window.location = `https://api.whatsapp.com/send?phone=6285159946600&text=Top-Up ${selectedAmount.value} ${selectedService.value} ke User ID ${userId.value} menggunakan ${selectedPayment.value}`;
 };
 </script>
