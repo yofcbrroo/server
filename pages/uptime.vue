@@ -5,7 +5,7 @@ const refreshInterval = ref(2);
 const serverList = ref<
   Array<{
     url: string;
-    ping: number;
+    ping: any;
     info: any;
     status: any;
     speed: any;
@@ -13,14 +13,14 @@ const serverList = ref<
 >([
   {
     url: "id1.foolvpn.me",
-    ping: 0,
+    ping: [],
     info: {},
     status: {},
     speed: {},
   },
   {
     url: "sg1.foolvpn.me",
-    ping: 0,
+    ping: [],
     info: {},
     status: {},
     speed: {},
@@ -28,13 +28,28 @@ const serverList = ref<
 ]);
 
 async function getServerPing(server: string) {
-  const startTime = new Date().getTime();
-  const res = await fetch(`https://${server}/api/v1/ping`);
-  const finishTime = new Date().getTime();
-  if (res.status == 200) {
-    for (const i in serverList.value) {
-      if (serverList.value[i].url == server) {
-        serverList.value[i].ping = finishTime - startTime;
+  let pingData = {};
+  try {
+    const startTime = new Date().getTime();
+    const res = await fetch(`https://${server}/api/v1/ping`);
+    const finishTime = new Date().getTime();
+    pingData = {
+      delay: res.status == 200 ? finishTime - startTime : 0,
+      date: new Date(),
+    };
+  } catch (e: any) {
+    pingData = {
+      delay: 0,
+      date: new Date(),
+    };
+  }
+
+  for (const i in serverList.value) {
+    if (serverList.value[i].url == server) {
+      serverList.value[i].ping.push(pingData);
+
+      if (serverList.value[i].ping.length > 58) {
+        serverList.value[i].ping.shift();
       }
     }
   }
@@ -84,7 +99,7 @@ onMounted(() => {
     <div class="w-[80%] lg:w-[50%] flex justify-around flex-wrap gap-2 p-2">
       <Card v-for="server in serverList">
         <div
-          class="mx-5 my-2 grid grid-rows-3 lg:grid-rows-none lg:grid-cols-3 font-bold"
+          class="mx-5 my-2 grid grid-rows-3 gap-3 lg:grid-rows-none lg:grid-cols-3 font-bold"
           v-if="server.info.country && server.status.mem"
         >
           <div class="flex items-center justify-center lg:justify-start font-bold gap-3">
@@ -105,11 +120,18 @@ onMounted(() => {
               </span>
             </div>
           </div>
-          <div class="row-span-2 lg:col-span-2 flex justify-center items-center gap-5">
+          <div class="row-span-2 lg:col-span-2 flex flex-col justify-center items-center gap-5">
             <div class="flex gap-5">
               <div class="flex flex-col">
                 <div>Ping</div>
-                <div class="text-xs">{{ server.ping }} ms</div>
+                <div class="text-xs">{{ server.ping[server.ping.length - 1].delay }} ms</div>
+                <div>
+                  <progress
+                    class="progress progress-secondary w-12"
+                    :value="server.ping.filter((data: any) => data.delay > 0 ).length"
+                    :max="server.ping.length"
+                  ></progress>
+                </div>
               </div>
               <div class="flex flex-col">
                 <div>CPU</div>
@@ -154,7 +176,14 @@ onMounted(() => {
             </div>
           </div>
         </div>
-        <div v-else class="h-24 w-full skeleton"></div>
+        <div v-else class="h-24 w-full bg-primary skeleton flex justify-center items-center text-gray-500">
+          {{ server.url }}
+        </div>
+        <div v-if="server.ping.length > 0" class="flex gap-1 w-full justify-end pb-1 px-1">
+          <div v-for="pingData in server.ping" class="tooltip" :data-tip="`${pingData.delay} ms (${pingData.date})`">
+            <div class="badge badge-xs" :class="pingData.delay > 0 ? 'badge-success' : 'badge-error'"></div>
+          </div>
+        </div>
       </Card>
     </div>
   </div>

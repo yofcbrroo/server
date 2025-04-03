@@ -1,5 +1,15 @@
 export const useSelectedProxiesStore = defineStore("selectedProxies", () => {
+  const selectedProxiesCookie = useCookie("selected-proxies");
   const selectedProxies = ref<string[]>([]);
+
+  // Check stored cookies
+  if (selectedProxiesCookie.value) {
+    try {
+      selectedProxies.value = atob(selectedProxiesCookie.value).split(",");
+    } catch (e: any) {
+      console.error(e.message);
+    }
+  }
 
   // Getters
   const getSelectedProxies = computed(() => selectedProxies.value);
@@ -11,6 +21,8 @@ export const useSelectedProxiesStore = defineStore("selectedProxies", () => {
     } else {
       selectedProxies.value.push(id);
     }
+
+    selectedProxiesCookie.value = btoa(selectedProxies.value.toString());
   }
 
   return { selectedProxies, getSelectedProxies, toggleSelectedProxies };

@@ -20,6 +20,7 @@
     "@nuxt/icon": "^1.11.0",
     "@nuxtjs/tailwindcss": "^6.13.2",
     "@pinia/nuxt": "^0.10.1",
-    "daisyui": "^4.12.24"
+    "daisyui": "^4.12.24",
+    "wrangler": "^4.7.0"
   }
 }
