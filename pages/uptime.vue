@@ -21,7 +21,23 @@ const serverList = ref<
     errors: [],
   },
   {
+    url: "id2.foolvpn.me",
+    ping: [],
+    info: {},
+    status: {},
+    speed: {},
+    errors: [],
+  },
+  {
     url: "sg1.foolvpn.me",
+    ping: [],
+    info: {},
+    status: {},
+    speed: {},
+    errors: [],
+  },
+  {
+    url: "sg2.foolvpn.me",
     ping: [],
     info: {},
     status: {},
