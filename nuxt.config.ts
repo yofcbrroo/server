@@ -5,5 +5,5 @@ export default defineNuxtConfig({
   tailwindcss: {
     exposeConfig: true,
   },
-  modules: ["@nuxtjs/tailwindcss", "@nuxt/icon", "@pinia/nuxt", "@nuxthub/core"],
+  modules: ["@nuxtjs/tailwindcss", "@nuxt/icon", "@pinia/nuxt"],
 });
