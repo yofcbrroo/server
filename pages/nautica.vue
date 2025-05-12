@@ -104,7 +104,7 @@ watch([openToast], () => {
 });
 
 // Client side fetching
-useFetch("https://myip.shylook.workers.dev", {
+useFetch("https://myip.ipeek.workers.dev", {
   server: false,
   cache: "no-cache",
 }).then(async (res) => {
