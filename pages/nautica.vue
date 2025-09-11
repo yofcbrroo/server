@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const route = useRoute();
 const selectedProxies = useSelectedProxiesStore();
 const myip = reactive({
   asOrganization: "",
@@ -29,6 +30,7 @@ const proxySettings = reactive<ProxySettings>({
   protocol: "trojan",
   format: "raw",
   tls: false,
+  host: route.query.host?.toString() || "nautica.foolvpn.me",
 });
 
 // Functions

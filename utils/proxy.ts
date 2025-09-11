@@ -15,6 +15,7 @@ type proxyType = {
 };
 type protocolsType = "trojan" | "vless" | "ss";
 export type ProxySettings = {
+  host: string;
   protocol: protocolsType;
   format: "mihomo" | "clash" | "bfr" | "sfa" | "raw";
   tls: boolean;
@@ -78,6 +79,7 @@ class ParseProxies {
           let ssPlugin: string[] = (configSearchParams.get("plugin") as string)?.split(";");
 
           ssPlugin = ssPlugin?.map((key) => (key.startsWith("path") ? `path=/${proxy.ip}-${proxy.port}` : key));
+          ssPlugin = ssPlugin?.map((key) => (key.startsWith("host") ? `host=${this.settings.host}` : key));
 
           if (!this.settings.tls) {
             ssPlugin?.splice(ssPlugin.indexOf("tls"), 1);
@@ -88,6 +90,8 @@ class ParseProxies {
           if (!this.settings.tls) {
             configSearchParams?.set("security", "none");
           }
+          configSearchParams?.set("host", this.settings.host);
+          configSearchParams?.set("sni", this.settings.host);
         }
 
         config.hash = `${getFlagEmoji(proxy.country)} ${proxy.isp} WS ${this.settings.tls ? "TLS" : "NTLS"} [${
