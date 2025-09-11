@@ -42,4 +42,4 @@ jobs:
         uses: nuxt-hub/action@v1
         id: deploy
         with:
-          project-key: foolvpn-zo6a
+          project-key: fool-vpn-3yji
