@@ -31,6 +31,7 @@ const proxySettings = reactive<ProxySettings>({
   format: "raw",
   tls: false,
   host: route.query.host?.toString() || "nautica.foolvpn.me",
+  server: "172.67.73.39",
 });
 
 // Functions
@@ -154,28 +155,38 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
     <div class="modal-box">
       <h3 class="text-lg font-bold">Settings</h3>
       <p class="py-4">Press ESC key or click the button below to close</p>
-      <div class="flex flex-wrap gap-2">
-        <fieldset class="fieldset">
-          <legend class="fieldset-legend">Protocol</legend>
-          <select class="select" v-model="proxySettings.protocol">
-            <option disabled selected>Pick a protocol</option>
-            <option v-for="protocol in getProtocols()" :value="protocol">{{ protocol }}</option>
-          </select>
-        </fieldset>
-        <fieldset class="fieldset">
-          <legend class="fieldset-legend">Format</legend>
-          <select class="select" v-model="proxySettings.format">
-            <option disabled selected>Pick a format</option>
-            <option v-for="format in getFormats()" :value="format">{{ format }}</option>
-          </select>
-        </fieldset>
-        <fieldset class="fieldset">
-          <legend class="fieldset-legend">TLS</legend>
-          <select class="select" v-model="proxySettings.tls">
-            <option disabled selected>is TLS</option>
-            <option v-for="tls in [true, false]" :value="tls">{{ tls }}</option>
-          </select>
-        </fieldset>
+      <div class="w-full h-max flex flex-col gap-5">
+        <div class="flex">
+          <div>
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">Bug CDN</legend>
+              <input v-model="proxySettings.server" type="text" placeholder="Type here" class="input w-full" />
+            </fieldset>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Protocol</legend>
+            <select class="select" v-model="proxySettings.protocol">
+              <option disabled selected>Pick a protocol</option>
+              <option v-for="protocol in getProtocols()" :value="protocol">{{ protocol }}</option>
+            </select>
+          </fieldset>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Format</legend>
+            <select class="select" v-model="proxySettings.format">
+              <option disabled selected>Pick a format</option>
+              <option v-for="format in getFormats()" :value="format">{{ format }}</option>
+            </select>
+          </fieldset>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">TLS</legend>
+            <select class="select" v-model="proxySettings.tls">
+              <option disabled selected>is TLS</option>
+              <option v-for="tls in [true, false]" :value="tls">{{ tls }}</option>
+            </select>
+          </fieldset>
+        </div>
       </div>
       <div class="modal-action">
         <form method="dialog">

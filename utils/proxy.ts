@@ -15,6 +15,7 @@ type proxyType = {
 };
 type protocolsType = "trojan" | "vless" | "ss";
 export type ProxySettings = {
+  server: string;
   host: string;
   protocol: protocolsType;
   format: "mihomo" | "clash" | "bfr" | "sfa" | "raw";
@@ -71,6 +72,13 @@ class ParseProxies {
     }
 
     if (configTemplate) {
+      // Preprocess config
+      configTemplate.hostname = this.settings.server;
+      if (!this.settings.tls) {
+        configTemplate.port = "80";
+      }
+
+      // Assign proxies
       for (const proxy of this.proxies) {
         let config = configTemplate;
         let configSearchParams = config?.searchParams;
