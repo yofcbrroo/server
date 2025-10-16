@@ -1,7 +1,6 @@
 <script setup lang="ts">
 const route = useRoute();
 const selectedProxies = useSelectedProxiesStore();
-
 const myip = reactive({
   asOrganization: "",
   ip: "",
@@ -11,8 +10,15 @@ const myip = reactive({
 });
 const proxies = ref([{ ip: "", isp: "", port: "", country: "" }]);
 const countries = ref([""]);
-const selectedCountry = ref("All");
-const displayProxies = ref([{ ip: "", isp: "", port: "", country: "" }]);
+const selectedCountry = ref("Select Country");
+const displayProxies = ref([
+  {
+    ip: "",
+    isp: "",
+    port: "",
+    country: "",
+  },
+]);
 const page = ref(0);
 const itemPerPage = ref(15);
 const pagination = ref([0, 1, 2]);
@@ -20,7 +26,6 @@ const displaySelected = ref(false);
 const openToast = ref(false);
 const toastText = ref("");
 const search = ref("");
-
 const proxySettings = reactive<ProxySettings>({
   protocol: "trojan",
   format: "raw",
@@ -29,7 +34,7 @@ const proxySettings = reactive<ProxySettings>({
   server: "172.67.73.39",
 });
 
-// === FUNGSI ===
+// Functions
 function getTempProxies() {
   let proxiesTemp = proxies.value;
 
@@ -39,15 +44,13 @@ function getTempProxies() {
     );
   }
 
-  if (selectedCountry.value && selectedCountry.value !== "All") {
-    proxiesTemp = proxiesTemp.filter(
-      (proxy) => proxy.country.toLowerCase() === selectedCountry.value.toLowerCase()
-    );
+  if (selectedCountry.value.length == 2) {
+    proxiesTemp = proxiesTemp.filter((proxy) => proxy.country.toString() == selectedCountry.value.toLowerCase());
   }
 
-  if (search.value) {
+  if (search.value != "") {
     proxiesTemp = proxiesTemp.filter((proxy) =>
-      proxy.isp.toLowerCase().includes(search.value.toLowerCase())
+      proxy.isp.toString().toLowerCase().includes(search.value.toLowerCase())
     );
   }
 
@@ -57,10 +60,14 @@ function getTempProxies() {
 function setDisplayProxies() {
   const displayProxiesTemp = [];
   const proxiesTemp = getTempProxies();
+
   for (let i = page.value * itemPerPage.value; i < page.value * itemPerPage.value + itemPerPage.value; i++) {
     const proxy = proxiesTemp[i];
-    if (proxy?.isp) displayProxiesTemp.push(proxy);
+    if (proxy?.isp.toString()) {
+      displayProxiesTemp.push(proxiesTemp[i]);
+    }
   }
+
   displayProxies.value = displayProxiesTemp as any;
 }
 
@@ -86,43 +93,57 @@ async function copyToClipboard() {
     proxySettings
   );
   navigator.clipboard.writeText(configResult as string);
-  openToast.value = true;
-  toastText.value = "Proxy copied to clipboard!";
 }
 
-// === WATCHER ===
+// Watcher
 watch([page, proxies, selectedCountry, displaySelected, search], () => {
   setDisplayProxies();
   setPagination();
 });
-watch(openToast, () => {
-  if (openToast.value)
-    setTimeout(() => {
-      openToast.value = false;
-    }, 3000);
+watch([openToast], () => {
+  setTimeout(() => {
+    openToast.value = false;
+  }, 3000);
 });
 
-// === FETCH DATA ===
-useFetch("https://myip.ipeek.workers.dev", { server: false, cache: "no-cache" }).then(async (res) => {
+// Client side fetching
+useFetch("https://myip.ipeek.workers.dev", {
+  server: false,
+  cache: "no-cache",
+}).then(async (res) => {
   await res.execute();
   if (res.status.value == "success") {
-    const json = JSON.parse(res.data.value as string);
-    Object.assign(myip, json);
-  } else {
+    const jsonValue = JSON.parse(res.data.value as string);
+
+    myip.asOrganization = jsonValue.asOrganization;
+    myip.ip = jsonValue.ip;
+    myip.city = jsonValue.city;
+    myip.region = jsonValue.region;
+    myip.country = jsonValue.country;
+  } else if (res.error.value) {
     myip.asOrganization = "Failed";
     myip.ip = "Failed";
   }
 });
 
+// Server side fetching
 useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/proxyList.txt").then((res) => {
   if (res.status.value == "success") {
     const proxiesTemp = [];
     const countriesTemp = [];
     for (const data of (res.data.value as string).split("\n")) {
       const [ip, port, country, isp] = data.split(",");
-      proxiesTemp.push({ ip, port, country: country.toLowerCase(), isp });
+
+      proxiesTemp.push({
+        ip,
+        port,
+        country: country.toLowerCase(),
+        isp,
+      });
+
       countriesTemp.push(country);
     }
+
     proxies.value = proxiesTemp as any;
     countries.value = ["All", ...new Set(countriesTemp)];
   }
@@ -130,115 +151,128 @@ useFetch("https://raw.githubusercontent.com/FoolVPN-ID/Nautica/refs/heads/main/p
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-900 text-gray-100 flex flex-col lg:flex-row">
-    <!-- SIDEBAR -->
-    <aside class="lg:w-1/4 w-full p-5 bg-gray-800 shadow-lg flex flex-col gap-5 sticky top-0 h-max lg:h-screen">
-      <div class="text-xl font-bold mb-3">🌐 Proxy Dashboard</div>
-
-      <div class="bg-gray-700 p-3 rounded-lg">
-        <p class="text-sm text-gray-400">Your IP:</p>
-        <p class="font-semibold">{{ myip.ip }}</p>
-        <p>{{ myip.city }}, {{ myip.region }}</p>
-        <p class="text-sm text-gray-400">{{ myip.asOrganization }}</p>
-      </div>
-
-      <div class="space-y-3">
-        <input v-model="search" type="text" placeholder="Search ISP..." class="input w-full bg-gray-700 text-white" />
-        <select v-model="selectedCountry" class="select w-full bg-gray-700 text-white">
-          <option v-for="country in countries" :key="country">{{ country }}</option>
-        </select>
-
-        <button @click="displaySelected = !displaySelected" class="btn bg-indigo-600 hover:bg-indigo-500 w-full">
-          {{ displaySelected ? "Show All" : "Show Selected" }}
-        </button>
-
-        <button onclick="my_modal_1.showModal()" class="btn bg-gray-700 hover:bg-gray-600 w-full">
-          ⚙️ Settings
-        </button>
-
-        <button @click="copyToClipboard" class="btn bg-green-600 hover:bg-green-500 w-full">
-          📋 Export Selected ({{ selectedProxies.getSelectedProxies.length }})
-        </button>
-      </div>
-    </aside>
-
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 p-6">
-      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <div
-          v-for="proxy in displayProxies"
-          :key="proxy.ip + proxy.port"
-          class="bg-gray-800 p-4 rounded-xl shadow-md hover:shadow-lg hover:bg-gray-700 transition"
-        >
-          <p class="font-bold text-indigo-400">{{ proxy.isp }}</p>
-          <p class="text-sm text-gray-300">{{ proxy.ip }}:{{ proxy.port }}</p>
-          <p class="text-xs text-gray-400 uppercase">{{ proxy.country }}</p>
-        </div>
-      </div>
-
-      <!-- Pagination -->
-      <div class="flex justify-center mt-6 space-x-2">
-        <button @click="page--" class="btn btn-sm bg-gray-700 hover:bg-gray-600">&lt;&lt;</button>
-        <button
-          v-for="pageIndex in pagination"
-          :key="pageIndex"
-          @click="page = pageIndex"
-          :class="pageIndex == page ? 'btn btn-sm bg-indigo-600' : 'btn btn-sm bg-gray-700 hover:bg-gray-600'"
-        >
-          {{ pageIndex }}
-        </button>
-        <button @click="page++" class="btn btn-sm bg-gray-700 hover:bg-gray-600">&gt;&gt;</button>
-      </div>
-    </main>
-  </div>
-
-  <!-- TOAST -->
-  <transition name="fade">
-    <div v-if="openToast" class="fixed bottom-5 right-5 bg-indigo-600 px-4 py-3 rounded-lg shadow-lg">
-      {{ toastText }}
-    </div>
-  </transition>
-
-  <!-- MODAL -->
+  <!-- Modal -->
   <dialog id="my_modal_1" class="modal">
-    <div class="modal-box bg-gray-800 text-white">
-      <h3 class="text-lg font-bold mb-3">⚙️ Proxy Settings</h3>
+    <div class="modal-box bg-base-200 text-base-content">
+      <h3 class="text-xl font-bold mb-2">Settings</h3>
+      <p class="text-sm opacity-70 mb-4">Tekan ESC atau klik tombol di bawah untuk menutup.</p>
 
-      <div class="flex flex-col gap-3">
-        <input v-model="proxySettings.server" type="text" placeholder="Server host"
-          class="input bg-gray-700 text-white" />
+      <div class="flex flex-col gap-5">
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Bug CDN</legend>
+          <input v-model="proxySettings.server" type="text" placeholder="Masukkan host CDN" class="input input-bordered w-full" />
+        </fieldset>
 
-        <div class="flex gap-2">
-          <select v-model="proxySettings.protocol" class="select flex-1 bg-gray-700 text-white">
-            <option disabled>Protocol</option>
-            <option v-for="p in getProtocols()" :key="p">{{ p }}</option>
-          </select>
+        <div class="flex flex-wrap gap-3">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Protocol</legend>
+            <select class="select select-bordered" v-model="proxySettings.protocol">
+              <option v-for="protocol in getProtocols()" :value="protocol">{{ protocol }}</option>
+            </select>
+          </fieldset>
 
-          <select v-model="proxySettings.format" class="select flex-1 bg-gray-700 text-white">
-            <option disabled>Format</option>
-            <option v-for="f in getFormats()" :key="f">{{ f }}</option>
-          </select>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Format</legend>
+            <select class="select select-bordered" v-model="proxySettings.format">
+              <option v-for="format in getFormats()" :value="format">{{ format }}</option>
+            </select>
+          </fieldset>
 
-          <select v-model="proxySettings.tls" class="select flex-1 bg-gray-700 text-white">
-            <option v-for="tls in [true, false]" :key="tls">{{ tls }}</option>
-          </select>
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">TLS</legend>
+            <select class="select select-bordered" v-model="proxySettings.tls">
+              <option v-for="tls in [true, false]" :value="tls">{{ tls }}</option>
+            </select>
+          </fieldset>
         </div>
       </div>
 
       <div class="modal-action">
-        <form method="dialog"><button class="btn bg-indigo-600 hover:bg-indigo-500">Done</button></form>
+        <form method="dialog">
+          <button class="btn btn-primary w-full">Selesai</button>
+        </form>
       </div>
     </div>
   </dialog>
-</template>
 
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.4s;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
+  <!-- Layout utama -->
+  <div class="my-10 mx-[10%] grid lg:grid-cols-6 gap-6">
+    <!-- Kolom kiri -->
+    <div class="flex flex-col gap-4">
+      <CardWithSlot icon="traffic-light">
+        <div class="flex flex-col">
+          <span class="font-semibold">{{ myip.asOrganization }}</span>
+          <span class="text-sm opacity-75">{{ myip.ip }}</span>
+        </div>
+      </CardWithSlot>
+
+      <CardWithSlot icon="map-marker">
+        <div class="flex flex-col">
+          <span>{{ myip.city }}, {{ myip.region }}</span>
+          <span class="text-sm opacity-75">{{ myip.country }}</span>
+        </div>
+      </CardWithSlot>
+
+      <CardWithSlot icon="cloud-computing">
+        <select class="select select-bordered w-full" v-model="selectedCountry">
+          <option disabled selected>Select Country</option>
+          <option v-for="country in countries">{{ country }}</option>
+        </select>
+      </CardWithSlot>
+    </div>
+
+    <!-- Kolom tengah (daftar proxy) -->
+    <div class="lg:col-span-4 flex flex-wrap gap-3 justify-center">
+      <ProxyCard v-for="proxy in displayProxies" :key="proxy.ip" :isp="proxy.isp" :ip-port="`${proxy.ip}:${proxy.port}`" :country="proxy.country" />
+    </div>
+
+    <!-- Kolom kanan -->
+    <div class="flex flex-col gap-4">
+      <CardWithSlot icon="search">
+        <input v-model="search" type="text" placeholder="Cari ISP..." class="input input-bordered w-full" />
+      </CardWithSlot>
+
+      <CardWithSlot icon="list-ul">
+        <button class="btn w-full font-bold" @click="displaySelected = !displaySelected">
+          {{ selectedProxies.getSelectedProxies.length }} selected
+        </button>
+      </CardWithSlot>
+
+      <CardWithSlot icon="cog">
+        <div class="flex flex-col gap-2">
+          <button class="btn btn-primary w-full" onclick="my_modal_1.showModal()">Settings</button>
+          <button
+            class="btn btn-secondary w-full"
+            @click="
+              async () => {
+                await copyToClipboard();
+                openToast = true;
+                toastText = 'Proxy copied to clipboard!';
+              }
+            "
+          >
+            Export
+          </button>
+        </div>
+      </CardWithSlot>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div class="flex justify-center mt-10">
+    <div class="join">
+      <button class="join-item btn" @click="page--">&lt;&lt;</button>
+      <button v-for="pageIndex in pagination" :key="pageIndex" class="join-item btn" :class="{ 'btn-active': pageIndex == page }" @click="page = pageIndex">
+        {{ pageIndex + 1 }}
+      </button>
+      <button class="join-item btn" @click="page++">&gt;&gt;</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div v-if="openToast" class="toast toast-center">
+    <div class="alert alert-info shadow-md">
+      <span>{{ toastText }}</span>
+    </div>
+  </div>
+</template>
